@@ -19,15 +19,15 @@ jobs:
       run: |
         mkdir -p downloads
         cd downloads
-        curl -L https://productionresultssa4.blob.core.windows.net/actions-results/018742df-4475-4334-a047-558f49f517d7/workflow-job-run-48aa44b4-fdfc-569b-b4bf-141ae83ade2a/artifacts/6080b1de9436a9166a0a755df456f81a3d57c0db50092e947e9751ba2219f6ca.zip?rscd=attachment%3B+filename%3D%22openstick-debian.zip%22&se=2025-10-11T00%3A53%3A58Z&sig=ssuC9H1CeGjUy9Yel1gcsb8nYr%2FWzN2RIFLGNxKEv7E%3D&ske=2025-10-11T10%3A43%3A03Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2025-10-10T22%3A43%3A03Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=r&spr=https&sr=b&st=2025-10-11T00%3A43%3A53Z&sv=2025-11-05
-           
+        wget -O rakalex_openstick_debian.zip --load-cookies cookies.txt "https://productionresultssa4.blob.core.windows.net/actions-results/018742df-4475-4334-a047-558f49f517d7/workflow-job-run-48aa44b4-fdfc-569b-b4bf-141ae83ade2a/artifacts/6080b1de9436a9166a0a755df456f81a3d57c0db50092e947e9751ba2219f6ca.zip?rscd=attachment%3B+filename%3D%22openstick-debian.zip%22&se=2025-10-12T00%3A43%3A14Z&sig=dLnYD3DJWl3Tum9YOut5LKWUCMceFt7Cik%2FJdlao%2FMA%3D&ske=2025-10-12T10%3A43%3A38Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2025-10-11T22%3A43%3A38Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=r&spr=https&sr=b&st=2025-10-12T00%3A33%3A09Z&sv=2025-11-05"
+                   
     - name: Determine release tag
       id: get_tag
       run: |
         if [ "${{ github.event_name }}" == "release" ]; then
           TAG_NAME="${{ github.event.release.tag_name }}"
         else
-          TAG_NAME="rakalex-debian"
+          TAG_NAME="debian-build-10-12-2025"
         fi
         echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
