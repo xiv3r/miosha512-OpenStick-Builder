@@ -1,4 +1,4 @@
-name: edl
+name: file
 
 on:
   workflow_dispatch:
