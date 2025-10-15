@@ -45,8 +45,8 @@ jobs:
 
       - name: CPU Performance 
         run:
-           sudo echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
-
+           echo performance | sudo tee /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+           
       - name: Install dependencies
         run: sudo sh -e scripts/install_deps.sh
 
