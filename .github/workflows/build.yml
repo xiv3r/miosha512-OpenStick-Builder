@@ -44,8 +44,8 @@ jobs:
           submodules: true
 
       - name: CPU Performance 
-        run:
-           echo performance | sudo tee /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+        run: |
+          echo performance | sudo tee /sys/devices/system/cpu/cpufreq/policy0/scaling_governor || true
            
       - name: Install dependencies
         run: sudo sh -e scripts/install_deps.sh
@@ -98,41 +98,61 @@ jobs:
           print(f"Created {zip_name}")
           PY
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.artifact_name.outputs.base }}
-          path: ${{ steps.artifact_name.outputs.zip }}
+      - name: Determine release tag
+        id: get_tag
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+          else
+            TAG_NAME="debian-uz801-v3-build-2025-10-15"
+          fi
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
-      - name: Create Release for this commit
+      - name: Delete existing release assets
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            
+            const targetRelease = releases.find(release => release.tag_name === '${{ steps.get_tag.outputs.tag_name }}');
+            
+            if (targetRelease) {
+              console.log(`Found release with tag: ${{ steps.get_tag.outputs.tag_name }}`);
+              console.log(`Release ID: ${targetRelease.id}`);
+              
+              const { data: assets } = await github.rest.repos.listReleaseAssets({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: targetRelease.id
+              });
+              
+              console.log(`Found ${assets.length} assets to delete`);
+              
+              for (const asset of assets) {
+                console.log(`Deleting asset: ${asset.name} (ID: ${asset.id})`);
+                await github.rest.repos.deleteReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  asset_id: asset.id
+                });
+              }
+              
+              console.log('All existing assets deleted');
+            } else {
+              console.log(`No release found with tag: ${{ steps.get_tag.outputs.tag_name }}`);
+            }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag="build-${GITHUB_SHA}"
 
-          branch="$GITHUB_REF_NAME"
-          case "$branch" in
-            debian)
-              human="Debian" ;;
-            ubuntu-24.04)
-              human="Ubuntu 24.04 (Noble)" ;;
-            ubuntu-*)
-              ver="${branch#ubuntu-}"
-              human="Ubuntu ${ver}" ;;
-            *)
-              tmp="${branch//-/ }"
-              human="$(awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2)}; print}' <<< "$tmp")" ;;
-          esac
-
-          date_str="$(date -u +%Y-%m-%d)"
-          title="${human} build: ${date_str}"
-          notes="Automated release for commit ${GITHUB_SHA} on ${GITHUB_REF_NAME}"
-
-          asset="${{ steps.artifact_name.outputs.zip }}"
-
-          gh release create "$tag" \
-            --target "$GITHUB_SHA" \
-            --title "$title" \
-            --notes "$notes" \
-            --prerelease \
-            "$asset"
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag_name }}
+          files: |
+            ${{ steps.artifact_name.outputs.zip }}
+            *.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
