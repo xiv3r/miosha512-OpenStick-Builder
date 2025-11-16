@@ -1,4 +1,4 @@
-name: Build
+name: Build Debian UZ801v3
 
 on:
   workflow_dispatch:
@@ -43,10 +43,6 @@ jobs:
         with:
           submodules: true
 
-      - name: CPU Performance 
-        run: |
-          echo performance | sudo tee /sys/devices/system/cpu/cpufreq/policy0/scaling_governor || true
-           
       - name: Install dependencies
         run: sudo sh -e scripts/install_deps.sh
 
@@ -104,7 +100,7 @@ jobs:
           if [ "${{ github.event_name }}" == "release" ]; then
             TAG_NAME="${{ github.event.release.tag_name }}"
           else
-            TAG_NAME="debian-uz801-v3-build-2025-10-15"
+            TAG_NAME="debian-uz801-v3-build-2025-11-16"
           fi
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
